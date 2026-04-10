@@ -11,6 +11,21 @@ wpływających na to, czy klient zdecyduje się na założenie lokaty terminowej
 * **Finanse:** Posiadanie kredytu hipotecznego (`housing`) obniża szansę na założenie lokaty.
 * **Modelowanie:** Zidentyfikowano ryzyko *data leakage* w zmiennej `duration`.
 
+## Podsumowanie Modelowania
+
+### Model: Regresja Logistyczna
+Problem: brak balansu w danych (tylko ok. 11% klientów zdecydowało się na subskrypcję). 
+
+**Cechy:**
+* **Skuteczna identyfikacja klientów:** Dzięki zbalansowaniu wag klas, model potrafi wskazać **62% wszystkich osób**, które decydują się na subskrypcje.
+* **Optymalizacja:** Zamiast dzwonić do wszystkich klientów z bazy bank może skupić się na grupie wskazanej przez model.
+* **Interpretowalność:** Model pozwolił zidentyfikować, które cechy  (np. wiek, saldo, historia poprzednich kampanii) mają największy wpływ na końcową decyzję.
+
+**Wyniki:**
+* **Accuracy:** 75%
+* **Recall:** 0.62
+* **F1-Score:** 0.37
+
 ## Organizacja Projektu
 
 ```
