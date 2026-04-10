@@ -1,12 +1,17 @@
-# analiza_subskrypcji
+# Analiza Subskrypcji
 
-<a target="_blank" href="https://cookiecutter-data-science.drivendata.org/">
-    <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
-</a>
+**Celem projektu jest analiza danych dotyczących subskrypcji. 
+Głównym zadaniem jest zrozumienie czynników 
+wpływających na to, czy klient zdecyduje się na założenie lokaty terminowej
+(zmienna `y`).**
 
-analiza_subskrypcji
+## Kluczowe wnioski z etapu EDA
+* **Profil Klienta:** Najwyższą konwersję (ok. 45%) wykazują seniorzy (65+).
+* **Zatrudnienie:** Studenci i emeryci to najbardziej responsywne grupy, mimo że stanowią mniejszość ankietowanych.
+* **Finanse:** Posiadanie kredytu hipotecznego (`housing`) obniża szansę na założenie lokaty.
+* **Modelowanie:** Zidentyfikowano ryzyko *data leakage* w zmiennej `duration`.
 
-## Project Organization
+## Organizacja Projektu
 
 ```
 ├── LICENSE            <- Open-source license if one is chosen
