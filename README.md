@@ -1,33 +1,77 @@
-# Analiza Subskrypcji
+Predykcja Sprzedaży Lokat Terminowych
+=====================================
 
-**Celem projektu jest analiza danych dotyczących subskrypcji. 
-Głównym zadaniem jest zrozumienie czynników 
-wpływających na to, czy klient zdecyduje się na założenie lokaty terminowej
-(zmienna `y`).**
+**Celem projektu była analiza czynników wpływających na decyzję o założeniu lokaty terminowej oraz budowa modeli klasyfikacyjnych przewidujących konwersję (zmienna y).**
 
-## Kluczowe wnioski z etapu EDA
-* **Profil Klienta:** Najwyższą konwersję (ok. 45%) wykazują seniorzy (65+).
-* **Zatrudnienie:** Studenci i emeryci to najbardziej responsywne grupy, mimo że stanowią mniejszość ankietowanych.
-* **Finanse:** Posiadanie kredytu hipotecznego (`housing`) obniża szansę na założenie lokaty.
-* **Modelowanie:** Zidentyfikowano ryzyko *data leakage* w zmiennej `duration`.
+Kluczowe wnioski z etapu EDA
+----------------------------
 
-## Podsumowanie Modelowania
+*   **Profil Klienta:** Najwyższą konwersję (ok. 45%) wykazują seniorzy (65+).
+    
+*   **Zatrudnienie:** Studenci i emeryci to najbardziej responsywne grupy, mimo że stanowią mniejszość ankietowanych.
+    
+*   **Finanse:** Posiadanie kredytu hipotecznego (housing) znacząco obniża szansę na założenie lokaty.
+    
+*   **Modelowanie:** Zidentyfikowano i wyeliminowano ryzyko _data leakage_ związanego ze zmienną duration (czas trwania rozmowy).
+    
+
+Podsumowanie Modelowania
+------------------------
 
 ### Model: Regresja Logistyczna
-Problem: brak balansu w danych (tylko ok. 11% klientów zdecydowało się na subskrypcję). 
+
+Głównym wyzwaniem był brak balansu w danych (tylko ok. 11% pozytywnych decyzji).
 
 **Cechy:**
-* **Skuteczna identyfikacja klientów:** Dzięki zbalansowaniu wag klas, model potrafi wskazać **62% wszystkich osób**, które decydują się na subskrypcje.
-* **Optymalizacja:** Zamiast dzwonić do wszystkich klientów z bazy bank może skupić się na grupie wskazanej przez model.
-* **Interpretowalność:** Model pozwolił zidentyfikować, które cechy  (np. wiek, saldo, historia poprzednich kampanii) mają największy wpływ na końcową decyzję.
+
+*   **Skuteczna identyfikacja:** Dzięki zbalansowaniu wag klas, model wyłapuje **62% wszystkich osób** faktycznie zainteresowanych ofertą.
+    
+*   **Interpretowalność:** Pozwala jasno określić wpływ cech (wiek, saldo, historia kampanii) na decyzję klienta.
+    
+*   **Zastosowanie:** Idealny do szerokich kampanii, gdzie zależy nam na maksymalnym zasięgu.
+    
 
 **Wyniki:**
-* **Accuracy:** 75%
-* **Recall:** 0.62
-* **F1-Score:** 0.37
 
+*   **Accuracy:** 75%
+    
+*   **Recall:** 0.62
+    
+*   **F1-Score:** 0.37
+    
+
+### Model: Sieci Neuronowe (MLPClassifier)
+
+Zastosowano architekturę typu Multi-layer Perceptron (MLP) z dwiema warstwami ukrytymi (20, 10) w celu uchwycenia nieliniowych zależności.
+
+**Cechy:**
+
+*   **Wysoka precyzja:** Model działa jak "snajper" – rzadziej wskazuje klientów, ale robi to z większą trafnością (**Precision: 0.55**).
+    
+*   **Złożoność:** Skutecznie wyłapuje nieliniowe korelacje, których regresja mogła nie zauważyć.
+    
+*   **Preprocessing:** Wymagał pełnej standaryzacji danych (StandardScaler) dla poprawnej zbieżności algorytmu.
+    
+
+**Wyniki:**
+
+*   **Accuracy:** 89%
+    
+*   **Precision:** 0.55
+    
+*   **Recall:** 0.28
+    
+
+Rekomendacja Biznesowa
+----------------------
+
+Wybór modelu zależy od strategii banku:
+
+1.  **Strategia Ekspansywna:** Wybór **Regresji Logistycznej**. Wyższy _Recall_ pozwala zdobyć więcej lokat kosztem większej liczby wykonanych połączeń.
+    
+2.  **Strategia Efektywnościowa:** Wybór **Sieci Neuronowej**. Wyższa _Precyzja_ optymalizuje czas pracy Call Center, kierując pracowników tylko do najbardziej pewnych klientów.
 ## Organizacja Projektu
-
+Tech stack: Python (Pandas, Scikit-learn, NumPy), Jupyter Notebook, Git
 ```
 ├── LICENSE            <- Open-source license if one is chosen
 ├── Makefile           <- Makefile with convenience commands like `make data` or `make train`
