@@ -1,125 +1,79 @@
-Predykcja Sprzedaży Lokat Terminowych
-=====================================
+# Raport BI: Lokaty terminowe – optymalizacja kampanii subskrypcyjnej
+**Autorzy: Dawid Wysokiński**
 
-**Celem projektu była analiza czynników wpływających na decyzję o założeniu lokaty terminowej oraz budowa modeli klasyfikacyjnych przewidujących konwersję (zmienna y).**
+---
 
-Kluczowe wnioski z etapu EDA
-----------------------------
+## 1. Problem biznesowy
+Bank XYZ chce zwiększyć efektywność sprzedaży subskrypcji lokat terminowych. W tym celu zlecił nam analizę bazy klientów, która zawiera informację o **45 211 klientach**. Podjęto decyzję o jej przeprowadzeniu w celu określenia, czy możliwe jest stworzenie modelu przewidującego, czy dany klient zdecyduje się na zakup subskrypcji lokaty terminowej w przypadku przedstawienia oferty na podstawie danych historycznych.
 
-*   **Profil Klienta:** Najwyższą konwersję (ok. 45%) wykazują seniorzy (65+).
-    
-*   **Zatrudnienie:** Studenci i emeryci to najbardziej responsywne grupy, mimo że stanowią mniejszość ankietowanych.
-    
-*   **Finanse:** Posiadanie kredytu hipotecznego (housing) znacząco obniża szansę na założenie lokaty.
-    
-*   **Modelowanie:** Zidentyfikowano i wyeliminowano ryzyko _data leakage_ związanego ze zmienną duration (czas trwania rozmowy).
-    
+## 2. Cel
+Głównym celem jest **ocena wykonalności**, która ma określić, które cechy dostępne w bazie danych klientów banku najbardziej wpływają na założenie lokaty terminowej, a także określić, jaki rodzaj modelu w zastosowaniu bankowym sprawdzi się lepiej. Raport ma służyć wspieraniu procesów decyzyjnych w organizacji.
 
-Podsumowanie Modelowania
-------------------------
+## 3. Metodyka
+Analiza została zrealizowana przy użyciu środowiska **Python** (biblioteki Pandas, Scikit-learn oraz biblioteki wizualizacyjne) w następujących krokach:
+1. **EDA** – określenie profilu klientów banku.
+2. **Przygotowanie danych**.
+3. **Modelowanie** – Regresja Logistyczna oraz Sieci Neuronowe (MLP).
+4. **Ocena i rekomendacja biznesowa**.
 
-### Model: Regresja Logistyczna
+## 4. EDA – profil klientów
+Analiza dostarczonych danych pozwoliła zbudować profile klientów, a także określić ogólne ich cechy jako grupy.
 
-Głównym wyzwaniem był brak balansu w danych (tylko ok. 11% pozytywnych decyzji).
+### Struktura wieku:
+Rozkład średniego wieku ankietowanych jest prawoskośny. Większość ankietowanych klientów znajduje się w przedziale wiekowym od 30 do 50 lat. Średni wiek ankietowanych wynosi około **41 lat**, a mediana **39 lat**. Oznacza to, że nieliczna grupa starszych ankietowanych klientów lekko zawyża średnią.
 
-**Cechy:**
+### Struktura zawodowa:
+Pracownicy fizyczni (*blue-collar*) oraz kadra zarządzająca (*management*) stanowią dominującą grupę ankietowanych. Najmniejszą grupę stanowią studenci. W przypadku 0,64% ankietowanych klientów zatrudnienie jest nieznane.
 
-*   **Skuteczna identyfikacja:** Dzięki zbalansowaniu wag klas, model wyłapuje **62% wszystkich osób** faktycznie zainteresowanych ofertą.
-    
-*   **Interpretowalność:** Pozwala jasno określić wpływ cech (wiek, saldo, historia kampanii) na decyzję klienta.
-    
-*   **Zastosowanie:** Idealny do szerokich kampanii, gdzie zależy nam na maksymalnym zasięgu.
-    
+### Analiza konwersji:
+* Wskaźnik konwersji wyniósł **11,70%** (pozytywną odpowiedź wyrażała średnio co dziewiąta lub dziesiąta osoba).
+* Grupy o najwyższym współczynniku konwersji to **studenci oraz emeryci** (przekraczający 20% zgód).
+* Na trzecim miejscu znajdują się osoby bezrobotne.
+* Najniższą skłonność do zakupu wykazują pracownicy fizyczni (*blue-collar*).
+* Wraz ze wzrostem wieku ankietowanych wzrasta ich współczynnik konwersji – praktycznie co druga osoba w wieku powyżej 65 lat decyduje się na ofertę.
 
-**Wyniki:**
+## 5. Modelowanie
+Podczas przygotowania danych nie zidentyfikowano silnych korelacji pomiędzy zmiennymi a decyzją. Jedną z wybijających się cech jest posiadanie przez ankietowanego kredytu hipotecznego, który zmniejsza szansę konwersji.
 
-*   **Accuracy:** 75%
-    
-*   **Recall:** 0.62
-    
-*   **F1-Score:** 0.37
-    
+Zidentyfikowano **wyciek danych (*Data Leakage*)** w zmiennej `duration` (czas trwania rozmowy). Cecha ta nie jest dostępna przed wykonaniem połączenia przedstawiającego ofertę; model musi przewidywać wynik przed kontaktem, aby bank mógł podjąć decyzję, któremu klientowi przedstawić ofertę.
 
-### Model: Sieci Neuronowe (MLPClassifier)
+## 6. Strategie modelowania (Analiza wariantów)
 
-Zastosowano architekturę typu Multi-layer Perceptron (MLP) z dwiema warstwami ukrytymi (20, 10) w celu uchwycenia nieliniowych zależności.
+| Kryterium | Wariant A: Regresja Logistyczna | Wariant B: Sieć Neuronowa (MLP) |
+| :--- | :--- | :--- |
+| **Recall** | Model wyłapuje większość chętnych (**0.62**). | Bank traci 72% potencjalnych klientów (**0.28**). |
+| **Precyzja** | Niska (**0.23**) – wiele zbędnych telefonów. | Wysoka (**0.55**) – większość telefonów to sukcesy. |
+| **Charakter** | Cechy są możliwe do interpretacji. | Czarna skrzynka – brak znajomości powodu decyzji. |
+| **Koszt** | Wyższy (większa liczba połączeń). | Niższy. |
 
-**Cechy:**
+### Analiza wag modelu (Wariant A):
+* **Wagi Pozytywne:** Sukces w przeszłości (`poutcome_success`), właściwy moment (`month_mar`, `month_oct`), emeryci i studenci, edukacja wyższa.
+* **Wagi Ujemne:** Niewłaściwy moment (`month_jan`, `month_nov`), zadłużenie (`housing_yes`, `loan_yes`).
 
-*   **Wysoka precyzja:** Model działa jak "snajper" – rzadziej wskazuje klientów, ale robi to z większą trafnością (**Precision: 0.55**).
-    
-*   **Złożoność:** Skutecznie wyłapuje nieliniowe korelacje, których regresja mogła nie zauważyć.
-    
-*   **Preprocessing:** Wymagał pełnej standaryzacji danych (StandardScaler) dla poprawnej zbieżności algorytmu.
-    
+## 7. Analiza SWOT
+* **Mocne strony:** Automatyczne wytypowanie potencjalnych klientów decydujących się na lokatę.
+* **Słabe strony:** Niska precyzja powoduje nadal dużą ilość zbędnych telefonów.
+* **Szanse:** Personalizacja oferty pod klientów z dużą szansą na sukces – Studenci oraz Emeryci.
+* **Zagrożenia:** Czynniki geopolityczne i zmienność rynkowa nieuwzględnione w modelu.
 
-**Wyniki:**
+## 8. Studium Wykonalności i Rekomendacja
+Raport odpowiada na trzy kluczowe pytania decyzyjne:
+1. **Czy to rozwiązanie jest możliwe technicznie?** Tak, analiza wykazała, że dane historyczne pozwalają na skuteczne trenowanie modeli klasyfikacyjnych.
+2. **Czy się opłaca?** Tak, automatyzacja wyboru klientów pozwala zredukować koszty operacyjne Call Center.
+3. **Czy warto je wdrożyć?** Tak, z punktu widzenia decyzji organizacji pozwala to na świadome targetowanie grup o wysokiej konwersji.
 
-*   **Accuracy:** 89%
-    
-*   **Precision:** 0.55
-    
-*   **Recall:** 0.28
-    
+**Rekomendacja końcowa:** Wprowadzenie rozwiązania jest możliwe. **Rekomenduje się wprowadzenie wariantu A: Regresja Logistyczna**, ponieważ model ten jest w pełni interpretowalny i wyłapuje większą liczbę chętnych.
 
-Rekomendacja Biznesowa
-----------------------
+---
 
-Wybór modelu zależy od strategii banku:
-
-1.  **Strategia Ekspansywna:** Wybór **Regresji Logistycznej**. Wyższy _Recall_ pozwala zdobyć więcej lokat kosztem większej liczby wykonanych połączeń.
-    
-2.  **Strategia Efektywnościowa:** Wybór **Sieci Neuronowej**. Wyższa _Precyzja_ optymalizuje czas pracy Call Center, kierując pracowników tylko do najbardziej pewnych klientów.
-## Organizacja Projektu
-Tech stack: Python (Pandas, Scikit-learn, NumPy), Jupyter Notebook, Git
-```
-├── LICENSE            <- Open-source license if one is chosen
-├── Makefile           <- Makefile with convenience commands like `make data` or `make train`
-├── README.md          <- The top-level README for developers using this project.
+## Załączniki
+### Organizacja Projektu (CCDS)
+```text
+├── README.md          <- Raport
 ├── data
-│   ├── external       <- Data from third party sources.
-│   ├── interim        <- Intermediate data that has been transformed.
-│   ├── processed      <- The final, canonical data sets for modeling.
-│   └── raw            <- The original, immutable data dump.
-│
-├── docs               <- A default mkdocs project; see www.mkdocs.org for details
-│
-├── models             <- Trained and serialized models, model predictions, or model summaries
-│
-├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-│                         the creator's initials, and a short `-` delimited description, e.g.
-│                         `1.0-jqp-initial-data-exploration`.
-│
-├── pyproject.toml     <- Project configuration file with package metadata for 
-│                         src and configuration for tools like black
-│
-├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-│
-├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-│   └── figures        <- Generated graphics and figures to be used in reporting
-│
-├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-│                         generated with `pip freeze > requirements.txt`
-│
-├── setup.cfg          <- Configuration file for flake8
-│
-└── src   <- Source code for use in this project.
-    │
-    ├── __init__.py             <- Makes src a Python module
-    │
-    ├── config.py               <- Store useful variables and configuration
-    │
-    ├── dataset.py              <- Scripts to download or generate data
-    │
-    ├── features.py             <- Code to create features for modeling
-    │
-    ├── modeling                
-    │   ├── __init__.py 
-    │   ├── predict.py          <- Code to run model inference with trained models          
-    │   └── train.py            <- Code to train models
-    │
-    └── plots.py                <- Code to create visualizations
-```
-
---------
-
+│   ├── processed      <- Dane przetworzone
+│   └── raw            <- Dane oryginalne
+├── notebooks          <- Jupyter Notebooks z kodem analizy
+├── reports
+│   └── figures        <- Wygenerowane wykresy
+└── src                <- Kod źródłowy projektu
